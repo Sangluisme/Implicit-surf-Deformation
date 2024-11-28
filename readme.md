@@ -17,6 +17,7 @@ install the package using
 ```
 pip install -r requirements.txt
 ```
+Please test if the `jax` successfully with `cuda`. 
 
 ## 📏 Data Preparation
 
@@ -67,3 +68,51 @@ python ./datasets/preprocessing.py --data_root ./FAUST_r --corr_root ./fmnet_p2p
 ```
 
 - Shape matching datasets where ground truth correspondences are offered.
+
+
+
+## 💻 Deformation Training and Evaluation
+
+```
+python train.py --conf <CONFIG FILE> --savedir <SAVE PATH> --expname <NAME OF EXPERIMENT> --subindex <INDEX OF DEORM PAIR> --reset
+```
+for example, train for pair in `FAUST_r`:
+
+```
+python train.py --conf ./conf/faust.conf --savedir ./exp --expname faust_r --subindex 4 --reset
+```
+
+Evaluation
+
+```
+python eval.py --modeldir <SAVED TRAINING FOLDER> --steps <TIME STEP> --mc_resolution <MARCHING CUBES RESOLUTION>
+```
+for example:
+
+```
+python eval.py --modeldir ./exp/faust/2024_12_12_12_12_12/ --steps 5 --me_resolution 256
+```
+
+## 📺 LipMLP Training and Evaluation
+
+```
+python train_lipmlp.py --conf <CONFIG FILE> --savedir <SAVE PATH> --expname <NAME OF EXPERIMENT> --subindex <INDEX OF DEORM PAIR>
+```
+for example, train for pair in `FAUST_r`:
+
+```
+python train_lipmlp.py --conf ./conf/faust_lip.conf --savedir ./exp --expname faust_r --subindex 4 --reset
+```
+
+Evaluation
+
+```
+python eval_lipmlp.py --modeldir <SAVED TRAINING FOLDER> --steps <TIME STEP> --mc_resolution <MARCHING CUBES RESOLUTION>
+```
+for example:
+
+```
+python eval_lipmlp.py --modeldir ./exp/faust/2024_12_12_12_12_12/ --steps 5 --me_resolution 256
+```
+
+note: for LipMLP please use MLP with node 512 and more than 6 layers. The Lipschitz loss weight is hardcoded with $10^{-10}$, since we find only this small value works.

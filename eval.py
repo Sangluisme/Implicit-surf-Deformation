@@ -159,7 +159,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--modeldir', type=str, default='./exp/fit_fraust/')
     parser.add_argument('--steps', type=int, default=5)
-    parser.add_argument('--visual', action='store_true')
     parser.add_argument('--mc_resolution',type=int, default=128)
     parser.add_argument('--skip_recon', action='store_true')
 
