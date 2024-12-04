@@ -11,7 +11,7 @@ University of Bonn
 ![teaser](assets/teaser.png)
 
 
-<!-- ![teaser](assets/shrec16.png) -->
+![teaser](assets/shrec16.png)
 
 ##  🖊️ Intro
 
