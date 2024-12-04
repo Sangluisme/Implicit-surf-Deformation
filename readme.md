@@ -1,10 +1,23 @@
-### Implicit Neural Surface Deformation with Explicit Velocity Fields
+# Implicit Neural Surface Deformation with Explicit Velocity Fields
+
+[Lu Sang](https://sangluisme.github.io/), [Zehranaz Canfes](), [Dongliang Cao](https://dongliangcao.github.io/), [Florian Bernard](https://scholar.google.com/citations?user=9GrQ2KYAAAAJ&hl=en), [Daniel Cremers](https://scholar.google.com/citations?user=cXQciMEAAAAJ&hl=en)
+
+Technical University of Munich, Munich Center for Machine Learning, 
+University of Bonn
+
+[📄 PAPER]() 
+
+
+![teaser](assets/teaser.png)
+
+
+<!-- ![teaser](assets/shrec16.png) -->
 
 ##  🖊️ Intro
 
 In this repo, we offer official code for the paper 
 
-- **Implicit Neural Surface Deformation with Explicit Velocity Fields**
+- [**Implicit Neural Surface Deformation with Explicit Velocity Fields**]()
 
 and re-implementation of 3D LipMLP
 
@@ -17,7 +30,7 @@ install the package using
 ```
 pip install -r requirements.txt
 ```
-Please test if the `jax` successfully with `cuda`. 
+Please test if the `jax` successfully with `cudnn`. 
 
 ## 📏 Data Preparation
 
@@ -54,7 +67,7 @@ It will create a `Take19` folder under `data` folder, containing
 
 - ### Shape matching data where the correspondences are obtained from method [**Unsupervised Learning of Robust Spectral Shape Matching**](https://github.com/dongliangcao/unsupervised-learning-of-robust-spectral-shape-matching)
 
-Please download the example [data](https://drive.google.com/file/d/1BCv3Jr1DIDxg6qiiaF4kZSj_wioEjd-e/view?usp=sharing) and extract it.
+Please download the example [data](https://drive.google.com/file/d/1BCv3Jr1DIDxg6qiiaF4kZSj_wioEjd-e/view?usp=sharing) and extract it. We offer 2 datasets with their correspondences `Faust_r` and `shrec16_cuts`.
 
 then run 
 ```
@@ -64,10 +77,12 @@ python ./datasets/preprocessing.py --data_root <TO YOUR DATA FOLDER> --corr_root
 for example:
 
 ```
-python ./datasets/preprocessing.py --data_root ./data/FAUST_r --corr_root ./data/faust_p2p --save_dir ./data/faust_r --data_type matching
+python ./datasets/preprocessing.py --data_root ./download_data/FAUST_r --corr_root ./download_data/faust_p2p --save_dir ./data/faust_r --data_type matching
 ```
 
 - ### Shape matching datasets where ground truth correspondences are offered.
+
+Please download the example [data](https://drive.google.com/file/d/1BCv3Jr1DIDxg6qiiaF4kZSj_wioEjd-e/view?usp=sharing) and extract it. We offer partial example dataset in `SMAL`.
 
 datasets such as original SMAL and FAUST are template datasets that the vertices are ordered. To deal these datasets, please run
 
@@ -80,7 +95,7 @@ python ./datasets/preprocessing.py --data_root <TO YOUR DATA FOLDER> --save_dir 
 for example:
 
 ```
-python ./datasets/preprocessing.py --data_root ./data/smal --save_dir ./data/smal --data_type template
+python ./datasets/preprocessing.py --data_root ./download_data/smal --save_dir ./data/smal --data_type template
 ```
 
 
