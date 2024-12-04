@@ -23,7 +23,7 @@ Please test if the `jax` successfully with `cuda`.
 
 We offer 3 different dataset:
 
-- Temporal Sequence Data, such as [**4D-DRESS**](https://eth-ait.github.io/4d-dress/)
+- ### Temporal Sequence Data, such as [**4D-DRESS**](https://eth-ait.github.io/4d-dress/)
 
 Please download the dataset from the website and get the folder has structure such as:
 
@@ -37,11 +37,11 @@ Please download the dataset from the website and get the folder has structure su
 
 then run 
 ```
-python ./datasets/preprocessing.py --data_root <TO YOUR DATA FOLDER> --seq_num <YOUR SEQUENCE NUMER> --save_dir ./data/
+python ./datasets/preprocessing.py --data_root <TO YOUR DATA FOLDER> --seq_num <YOUR SEQUENCE NUMER> --save_dir ./data/ --data_type temporal
 ```
 for example
 ```
-python ./datasets/preprocessing.py --data_root ./_4D-DRESS_00135_Outer_2 --seq_num 19 --save_dir ./data/
+python ./datasets/preprocessing.py --data_root ./_4D-DRESS_00135_Outer_2 --seq_num 19 --save_dir ./data/ --data_type temporal
 ```
 
 It will create a `Take19` folder under `data` folder, containing
@@ -52,22 +52,36 @@ It will create a `Take19` folder under `data` folder, containing
         |--smpl
         |--train
 
-- Shape matching data where the correspondences are obtained from method [**Unsupervised Learning of Robust Spectral Shape Matching**](https://github.com/dongliangcao/unsupervised-learning-of-robust-spectral-shape-matching)
+- ### Shape matching data where the correspondences are obtained from method [**Unsupervised Learning of Robust Spectral Shape Matching**](https://github.com/dongliangcao/unsupervised-learning-of-robust-spectral-shape-matching)
 
-Please download the [data](https://drive.google.com/file/d/1zbBs3NjUIBBmVebw38MC1nhu_Tpgn1gr/view) evaluation files from [this link]() and extract it.
+Please download the example [data](https://drive.google.com/file/d/1BCv3Jr1DIDxg6qiiaF4kZSj_wioEjd-e/view?usp=sharing) and extract it.
 
 then run 
 ```
-python ./datasets/preprocessing.py --data_root <TO YOUR DATA FOLDER> --corr_root <THE EXTRACT NPY FILES> --save_dir ./data/
+python ./datasets/preprocessing.py --data_root <TO YOUR DATA FOLDER> --corr_root <THE EXTRACT NPY FILES> --save_dir ./data/ --data_type matching
 ```
 
 for example:
 
 ```
-python ./datasets/preprocessing.py --data_root ./FAUST_r --corr_root ./fmnet_p2p/faust_p2p --save_dir ./data/faust_r
+python ./datasets/preprocessing.py --data_root ./data/FAUST_r --corr_root ./data/faust_p2p --save_dir ./data/faust_r --data_type matching
 ```
 
-- Shape matching datasets where ground truth correspondences are offered.
+- ### Shape matching datasets where ground truth correspondences are offered.
+
+datasets such as original SMAL and FAUST are template datasets that the vertices are ordered. To deal these datasets, please run
+
+
+```
+python ./datasets/preprocessing.py --data_root <TO YOUR DATA FOLDER> --save_dir ./data/
+--data_type template
+```
+
+for example:
+
+```
+python ./datasets/preprocessing.py --data_root ./data/smal --save_dir ./data/smal --data_type template
+```
 
 
 

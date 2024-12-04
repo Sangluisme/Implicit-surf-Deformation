@@ -276,6 +276,82 @@ class FlaxPairGenerate:
         print('done.')
 
 
+class TemplatePairGenerate:
+    def __init__(self, data_root, save_dir=" ", point_num=20000):
+
+        assert os.path.isdir(data_root), f'Invaid data root:{data_root}.'
+        
+        self.data_root = data_root
+        self.save_dir = save_dir
+        self.point_num=point_num
+        
+        utils.mkdir_ifnotexists(self.save_dir)
+
+        self.mesh_paths = [f for f in os.listdir(self.data_root) if f.endswith('.off')]
+        self.mesh_paths = sort_list(self.mesh_paths)
+
+        #create dataset
+        self.mesh_folder = os.path.join(self.save_dir, 'mesh')
+        utils.mkdir_ifnotexists(self.mesh_folder)
+        
+        self.ptc_folder = os.path.join(self.save_dir, 'ptc')
+        utils.mkdir_ifnotexists(self.ptc_folder)
+        
+        self.flax_folder = os.path.join(self.save_dir, 'flax_ptc')
+        utils.mkdir_ifnotexists(self.flax_folder)
+        
+        self.train_folder = os.path.join(self.save_dir, 'train')
+        utils.mkdir_ifnotexists(self.train_folder)
+
+        self.size = len(self.mesh_paths)
+        self.combination = [[i,j] for i in range(self.size) for j in range(self.size) if i!=j]
+
+    def __len__(self):
+        return len(self.combination)
+    
+    def process(self):
+        # create ptc
+        for index in range(self.size):
+            meshfile = os.path.join(self.data_root, self.mesh_paths[index])
+            prefix = self.mesh_paths[index].split('.')[0]
+            savefile = os.path.join(self.flax_folder, prefix)
+            points = create_flax_pointcloud(meshfile=meshfile, savefile=savefile, point_num=self.point_num)
+            filename = os.path.join(self.ptc_folder, prefix + '.ply')
+            mesh_utils.save_pointcloud(points, filename)
+        
+        #create training pair
+        dptc_list = generate_pesudo_dptc(self.point_num)
+        dptc_x, dptc_y= dptc_list
+        
+        flax_paths = [f for f in os.listdir(self.flax_folder) if f.endswith('.flax')]
+        flax_paths = sort_list(flax_paths)
+        for pair in self.combination:
+            i,j = pair
+            dptc_x_file  = os.path.join(self.flax_folder, flax_paths[i])
+            with open(dptc_x_file,'rb') as f:
+                bytes_data = f.read()
+                
+            dptc_x = serialization.from_bytes(dptc_x, bytes_data)
+            dptc_y_file  = os.path.join(self.flax_folder, flax_paths[j])
+            with open(dptc_y_file,'rb') as f:
+                bytes_data = f.read()
+                
+            dptc_y = serialization.from_bytes(dptc_y, bytes_data)
+            
+            dptc_list = [dptc_x, dptc_y]
+            
+            bytes_data = serialization.to_bytes(dptc_list)
+
+            filename = os.path.join(self.train_folder, flax_paths[i].split('.')[-2] + '_' +flax_paths[j].split('.')[-2])
+            
+            with open(filename + '.flax', 'wb') as f:
+                f.write(bytes_data)
+            
+            print('save {0}'.format(filename))
+    
+    
+    
+
 def create_flax_pointcloud(meshfile, savefile, point_num=20000):
     verts, normals, center, mesh, scale = mesh_utils.load_mesh(meshfile)
     name = meshfile.split('.')[-2]
@@ -334,11 +410,14 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    if args.data_type =='FlaxPairGenerate':
+    if args.data_type =='matching':
         dataset = FlaxPairGenerate(data_root=args.data_root, corr_folder=args.corr_root, save_dir=args.save_dir)
         dataset.process()
-    elif args.data_tyep == 'Dress4DShapeGenerate':
+    elif args.data_type == 'temporal':
         dataset = Dress4DShapeGenerate(data_root=args.data_root, seq_num=args.seq_num, save_dir=args.save_dir)
+        dataset.process()
+    elif args.data_type == 'template':
+        dataset = TemplatePairGenerate(data_root=args.data_root, save_dir=args.save_dir)
         dataset.process()
     else:
         raise NotImplementedError
