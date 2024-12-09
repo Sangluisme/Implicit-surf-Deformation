@@ -32,11 +32,18 @@ pip install -r requirements.txt
 ```
 Please test if the `jax` successfully with `cudnn`. 
 
-Install jax version 0.4.14 matching your CUDA version as described here. For example for CUDA 11:
+Install jax version 0.4.25 matching your CUDA version as described here. For example for CUDA 12:
 ```
-pip install --upgrade "jax[cuda11_pip]==0.4.25" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+pip install -U "jax[cuda12]"
 ```
 Other jax versions may also work, but have not been tested.
+
+**Trouble shooting**
+
+If `natsort` fail, delete the `natsort==8.4.0` in `requirements.txt`, after install the reset, run
+```
+pip install natsort
+```
 
 ## 📏 Data Preparation
 

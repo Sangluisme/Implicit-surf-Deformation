@@ -9,6 +9,6 @@ scikit-image
 scipy==1.9.1
 tqdm
 trimesh==4.2.0
-narsort
 pyhocon
 plyfile
+natsort==8.4.0

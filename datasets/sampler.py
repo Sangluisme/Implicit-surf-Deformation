@@ -57,7 +57,6 @@ def compute_local_sigma(points, k=50):
     return np.concatenate(sigmas)
 
 
-@partial(jax.jit, static_argnames="samples_per_point")
 def generate_local_samples(key, points, local_sigma):
     if len(local_sigma) > 0: 
         num_points, dims = points.shape

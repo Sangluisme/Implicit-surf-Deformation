@@ -7,7 +7,6 @@ import jax.numpy as jnp
 import jax.random as jrnd
 import jax
 from functools import partial
-import wandb
 import sys
 project_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(project_dir)
