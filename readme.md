@@ -32,6 +32,12 @@ pip install -r requirements.txt
 ```
 Please test if the `jax` successfully with `cudnn`. 
 
+Install jax version 0.4.14 matching your CUDA version as described here. For example for CUDA 11:
+```
+pip install --upgrade "jax[cuda11_pip]==0.4.25" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+```
+Other jax versions may also work, but have not been tested.
+
 ## 📏 Data Preparation
 
 We offer 3 different dataset:

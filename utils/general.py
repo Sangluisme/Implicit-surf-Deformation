@@ -9,7 +9,7 @@ import jax
 
 def mkdir_ifnotexists(directory):
     if not os.path.exists(directory):
-        os.mkdir(directory)
+        os.makedirs(directory)
         
 
 def get_class(kls):

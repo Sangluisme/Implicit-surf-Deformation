@@ -1,6 +1,6 @@
 flax==0.8.1
 jax==0.4.25
-jaxlib==0.4.25+cuda11.cudnn86
+jaxlib==0.4.25
 matplotlib
 numpy==1.24.4
 optax==0.2.1
@@ -9,5 +9,6 @@ scikit-image
 scipy==1.9.1
 tqdm
 trimesh==4.2.0
-wandb==0.16.4
-narsorted
+narsort
+pyhocon
+plyfile
