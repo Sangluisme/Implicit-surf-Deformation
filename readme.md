@@ -1,11 +1,13 @@
 # Implicit Neural Surface Deformation with Explicit Velocity Fields
 
+**ICLR 2025**
+
 [Lu Sang](https://sangluisme.github.io/), [Zehranaz Canfes](), [Dongliang Cao](https://dongliangcao.github.io/), [Florian Bernard](https://scholar.google.com/citations?user=9GrQ2KYAAAAJ&hl=en), [Daniel Cremers](https://scholar.google.com/citations?user=cXQciMEAAAAJ&hl=en)
 
 Technical University of Munich, Munich Center for Machine Learning, 
 University of Bonn
 
-[📄 PAPER]() 
+[📄 PAPER]() coming soon...
 
 
 ![teaser](assets/teaser.png)
