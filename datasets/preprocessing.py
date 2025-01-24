@@ -118,7 +118,7 @@ class Dress4DShapeGenerate:
             prefix = mesh_name.split('.')[0]
             mesh_files =os.path.join(self.smpl_save_folder, mesh_name)
             save_file = os.path.join(self.flax_folder, prefix)
-            points = create_flax_pointcloud(meshfile=mesh_files, savefile=save_file, point_num=self.point_num)
+            points, mesh = create_flax_pointcloud(meshfile=mesh_files, savefile=save_file, point_num=self.point_num, normalize=True)
             filename = os.path.join(self.ptc_folder, prefix + '.ply')
             mesh_utils.save_pointcloud(points, filename)
         print('done.')
@@ -150,7 +150,7 @@ class Dress4DShapeGenerate:
             
             bytes_data = serialization.to_bytes(dptc_list)
 
-            filename = os.path.join(self.train_folder, flax_paths[i].split('.')[-2] + '_' +flax_paths[i+5].split('.')[-2])
+            filename = os.path.join(self.train_folder, flax_paths[i].split('.')[-2] + '-' +flax_paths[i+5].split('.')[-2])
             
             with open(filename + '.flax', 'wb') as f:
                 f.write(bytes_data)
@@ -277,13 +277,14 @@ class FlaxPairGenerate:
 
 
 class TemplatePairGenerate:
-    def __init__(self, data_root, save_dir=" ", point_num=20000):
+    def __init__(self, data_root, save_dir=" ", point_num=20000, normalize=False):
 
         assert os.path.isdir(data_root), f'Invaid data root:{data_root}.'
         
         self.data_root = data_root
         self.save_dir = save_dir
         self.point_num=point_num
+        self.normalize = normalize
         
         utils.mkdir_ifnotexists(self.save_dir)
 
@@ -315,9 +316,13 @@ class TemplatePairGenerate:
             meshfile = os.path.join(self.data_root, self.mesh_paths[index])
             prefix = self.mesh_paths[index].split('.')[0]
             savefile = os.path.join(self.flax_folder, prefix)
-            points = create_flax_pointcloud(meshfile=meshfile, savefile=savefile, point_num=self.point_num)
+            points, mesh = create_flax_pointcloud(meshfile=meshfile, savefile=savefile, point_num=self.point_num, normalize=self.normalize)
             filename = os.path.join(self.ptc_folder, prefix + '.ply')
             mesh_utils.save_pointcloud(points, filename)
+            
+            #save meshes
+            filename = os.path.join(self.mesh_folder, prefix + '.ply')
+            mesh_utils.save_mesh(mesh.vertices, mesh.faces, filename=filename)
         
         #create training pair
         dptc_list = generate_pesudo_dptc(self.point_num)
@@ -338,11 +343,11 @@ class TemplatePairGenerate:
                 
             dptc_y = serialization.from_bytes(dptc_y, bytes_data)
             
-            dptc_list = [dptc_x, dptc_y]
+            dptc_list = [dptc_x, dptc_y,jnp.array([])]
             
             bytes_data = serialization.to_bytes(dptc_list)
 
-            filename = os.path.join(self.train_folder, flax_paths[i].split('.')[-2] + '_' +flax_paths[j].split('.')[-2])
+            filename = os.path.join(self.train_folder, flax_paths[i].split('.')[-2] + '-' +flax_paths[j].split('.')[-2])
             
             with open(filename + '.flax', 'wb') as f:
                 f.write(bytes_data)
@@ -352,8 +357,20 @@ class TemplatePairGenerate:
     
     
 
-def create_flax_pointcloud(meshfile, savefile, point_num=20000):
-    verts, normals, center, mesh, scale = mesh_utils.load_mesh(meshfile)
+def create_flax_pointcloud(meshfile, savefile, point_num=20000, normalize=False):
+    
+    # normalize meshes
+    if normalize:
+        verts, normals, center, mesh, scale = mesh_utils.load_mesh(meshfile)
+    else:
+    # not normalize meshes
+        mesh = trimesh.load(meshfile)
+        verts = mesh.vertices
+        normals = mesh.vertex_normals
+        center = np.array([0,0,0])
+        scale = 1.0
+        
+    
     name = meshfile.split('.')[-2]
     point_shape = PointShape(verts=verts, normals=normals, mesh=mesh, center=center, scale=scale, name=name)
     flax_ptc = init_point_cloud(point_shape, point_num=point_num)
@@ -366,7 +383,7 @@ def create_flax_pointcloud(meshfile, savefile, point_num=20000):
     print('save {0}'.format(savefile))
     
     points = jnp.concatenate([flax_ptc.verts, flax_ptc.points])
-    return points
+    return points, mesh
 
 def generate_pesudo_dptc(point_num):
     dptc_x = DeformPointCloud(verts=jnp.zeros((5000,3)),
@@ -375,7 +392,8 @@ def generate_pesudo_dptc(point_num):
             points_normals=jnp.zeros((point_num,3)), 
             local_sigma=jnp.zeros((point_num + 5000,3)),
             upper=jnp.ones((3)),
-            lower=-jnp.ones((3))
+            lower=-jnp.ones((3)),
+            features=jnp.array([])
     )  
 
     dptc_list = [dptc_x, dptc_x]
