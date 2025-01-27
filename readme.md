@@ -7,7 +7,7 @@
 Technical University of Munich, Munich Center for Machine Learning, 
 University of Bonn
 
-[📄 PAPER]() coming soon...
+[📄 PAPER](https://arxiv.org/abs/2501.14038)
 
 
 ![teaser](assets/teaser.png)

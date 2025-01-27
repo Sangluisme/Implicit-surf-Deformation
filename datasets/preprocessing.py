@@ -343,7 +343,7 @@ class TemplatePairGenerate:
                 
             dptc_y = serialization.from_bytes(dptc_y, bytes_data)
             
-            dptc_list = [dptc_x, dptc_y,jnp.array([])]
+            dptc_list = [dptc_x, dptc_y]
             
             bytes_data = serialization.to_bytes(dptc_list)
 
