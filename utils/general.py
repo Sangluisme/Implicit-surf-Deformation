@@ -58,9 +58,9 @@ def learning_rate_decay(step,
   return delay_rate * log_lerp
 
 
-def step_learning_rate_decay(epoch, step=80, warmup=2000, initial=0.005, interval=2000, factor=0.5):
-    learn_rate = jnp.where( (epoch // step)< warmup, 0.0005, jnp.maximum(initial * (factor ** ( (epoch // step) // interval)), 5.0e-6))
-    return learn_rate
+
+def step_learning_rate_decay(epoch, initial=0.005, interval=2000, factor=0.5):
+    return jnp.maximum(initial * (factor ** (epoch // interval)), 5.0e-6)
 
 
 
