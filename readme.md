@@ -135,3 +135,21 @@ python eval_lipmlp.py --modeldir ./exp/faust/2024_12_12_12_12_12/ --steps 5 --me
 ```
 
 note: for LipMLP please use MLP with node 512 and more than 6 layers. The Lipschitz loss weight is hardcoded with $10^{-10}$, since we find only this small value works.
+
+
+### Cite
+```
+@inproceedings{sang2025implicit,
+  title = {Implicit Neural Surface Deformation with Explicit Velocity Fields},
+  author = {Sang, Lu and Canfes, Zehranaz and Cao, Dongliang and Bernard, Florian and Cremers, Daniel},
+  year = {2025},
+  booktitle = {ICLR},
+}
+```
+
+### Check our other work
+
+[**4Deform: Neural Surface Deformation for Robust Shape Interpolation**](https://4deform.github.io/)
+
+
+[**TwoSquared: 4D Generation from 2D Image Pairs**](https://sangluisme.github.io/TwoSquared/)

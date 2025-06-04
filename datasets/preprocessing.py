@@ -220,20 +220,7 @@ class FlaxPairGenerate:
             
             print('mesh_x verts: {0} vs mesh_y verts: {1} vs. corres verts: {2} vs max corr {3}'.format(mesh_x.vertices.shape[0], mesh_y.vertices.shape[0], corr_xy.shape[0], np.max(corr_xy)))
             
-            # points = mesh_x.vertices
-            
-            # shape_scale = np.max([np.max(points[:,0])-np.min(points[:,0]),np.max(points[:,1])-np.min(points[:,1]),np.max(points[:,2])-np.min(points[:,2])])
-            # shape_center = [(np.max(points[:,0])+np.min(points[:,0]))/2, (np.max(points[:,1])+np.min(points[:,1]))/2, (np.max(points[:,2])+np.min(points[:,2]))/2]
-            
-            # mesh_x.vertices = mesh_x.vertices - shape_center
-            # mesh_x.vertices = mesh_x.vertices / 1.5
-            
-            # points = mesh_y.vertices
-            # shape_scale = np.max([np.max(points[:,0])-np.min(points[:,0]),np.max(points[:,1])-np.min(points[:,1]),np.max(points[:,2])-np.min(points[:,2])])
-            # shape_center = [(np.max(points[:,0])+np.min(points[:,0]))/2, (np.max(points[:,1])+np.min(points[:,1]))/2, (np.max(points[:,2])+np.min(points[:,2]))/2]
-            
-            
-            # mesh_y.vertices = mesh_y.vertices - shape_center
+           
             mesh_x.apply_translation(-mesh_x.centroid)
             mesh_y.apply_translation(-mesh_y.centroid)
             
@@ -314,9 +301,9 @@ class FlaxPairGenerate:
             filename = os.path.join(self.ptc_folder, mesh_name2 + '.ply')
             mesh_utils.save_pointcloud(points=points, filename=filename)
             
-            prefix = self.corres_paths[index][:-8]
-            colors = vis.get_corres_color(dptc_x, 1)
-            vis.save_corres_color(dptc_x, dptc_y, colors, self.corr_vis, prefix)
+            # prefix = self.corres_paths[index][:-8]
+            # colors = vis.get_corres_color(dptc_x, 1)
+            # vis.save_corres_color(dptc_x, dptc_y, colors, self.corr_vis, prefix)
         
         print('done.')
 
@@ -481,9 +468,6 @@ if __name__ == "__main__":
     
     if args.data_type =='matching':
         dataset = FlaxPairGenerate(data_root=args.data_root, corr_folder=args.corr_root, save_dir=args.save_dir)
-        dataset.process()
-    elif args.data_type == 'temporal':
-        dataset = Dress4DShapeGenerate(data_root=args.data_root, seq_num=args.seq_num, save_dir=args.save_dir)
         dataset.process()
     elif args.data_type == 'template':
         dataset = TemplatePairGenerate(data_root=args.data_root, save_dir=args.save_dir)
