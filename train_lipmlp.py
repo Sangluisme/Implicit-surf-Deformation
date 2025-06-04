@@ -109,8 +109,7 @@ def setup(args):
         **conf.plot
     )
     
-    dataset = utils.get_class(conf.dataset_class)(subindex=[args.subindex], **conf.datasets)
-
+    dataset = utils.get_class(conf.dataset_class)(index=args.index, subindex=args.subindex, **conf.datasets)
 
     return conf, checkpoint_manager, plot_manager, dataset
     
@@ -133,35 +132,45 @@ def run(conf, checkpoint_manager, plot_manager, dataset):
     key, = jrnd.split(key, 1)
 
     implicit_train_state = model.model_init(key, learning_rate_fn, implicit_net, conf.network.implicit_net)
+    dptc_list = dataset.generate_pesudo_dptc(20000)
 
     try:
         step = checkpoint_manager.latest_step()
         start_epoch = step
         # target = {'model':implicit_train_state, 'index': 0, 'pair': [0,1]}
-        target = {'model':implicit_train_state, 'index': 0, 'pair': [0,1], 'upper':np.array([0.5,0.8,0.4]), 'lower':np.array([-0.5,-0.8,-0.4])}
+        target = {'model':implicit_train_state, 'index': 0, 'subindex':1, 'pair': [0,1], 'upper':np.array([0.5,0.8,0.4]), 'lower':np.array([-0.5,-0.8,-0.4])}
         restored = checkpoint_manager.restore(step, items=target)
         implicit_train_state = restored['model']
-        subindex = restored['index']
+        index = restored['index']
+        subindex=restored['subindex']
+        
+        internal_index = dataset.get_index([index, subindex])
+        dptc_x, dptc_y = dataset.getitem(dptc_list, index=internal_index)
+        
 
     except:
         start_epoch = 0
-        subindex = 0
+        index=args.index
+        subindex = args.subindex
+        start_epoch = 0
+        internal_index = dataset.get_index(args.index, args.subindex)
+        dptc_x, dptc_y = dataset.getitem(dptc_list)
 
 
-    dptc_list = dataset.generate_pesudo_dptc(20000)
     pair = dataset.combinations[0]
     print(" train for {0} -----> {1}...............".format(pair[0], pair[1]))
         
         
-    dptc_x, dptc_y = dataset.getitem(0, dptc_list)
+    dptc_x, dptc_y = dataset.getitem(dptc_list)
         
     # setting plot manager
     bounding_box = mesh_utils.get_bounding_box(jnp.concatenate((dptc_x.points, dptc_y.points)))
-    prefix = dataset.mesh_paths[0][:-5] + '_'
+    prefix = dataset.mesh_paths[internal_index][:-5] + '_'
     
     plot_manager(lower=bounding_box[0], upper=bounding_box[1], vertex_size = len(dptc_x.verts), prefix=prefix)
     checkpoint_info={
-        'index':subindex,
+        'subindex': subindex,
+        'index':index,
         'pair':pair,
         'upper':bounding_box[0],
         'lower':bounding_box[1]

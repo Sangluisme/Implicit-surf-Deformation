@@ -115,7 +115,7 @@ def setup(args):
         **conf.plot
     )
     
-    dataset = utils.get_class(conf.dataset_class)(subindex=[args.subindex], **conf.datasets)
+    dataset = utils.get_class(conf.dataset_class)(index=args.index, subindex=args.subindex, **conf.datasets)
 
     return conf, checkpoint_manager, plot_manager, dataset
 
@@ -142,36 +142,44 @@ def run(conf, checkpoint_manager, plot_manager, dataset):
 
     implicit_train_state, velocity_train_state = model.model_init(key, learning_rate_fn, implicit_net, velocity_net, conf)
 
-
+    dptc_list = dataset.generate_pesudo_dptc(20000)
 
     try:
         step = checkpoint_manager.latest_step()
         start_epoch = step
         # target = {'model':implicit_train_state, 'index': 0, 'pair': [0,1]}
-        target = {'model':(implicit_train_state, velocity_train_state), 'index': 0, 'pair': [0,1], 'upper':np.array([0.5,0.8,0.4]), 'lower': np.array([-0.5,-0.8,-0.4])}
+        target = {'model':(implicit_train_state, velocity_train_state), 'index': 0, 'subindex':1, 'pair': [0,1], 'upper':np.array([0.5,0.8,0.4]), 'lower': np.array([-0.5,-0.8,-0.4])}
         restored = checkpoint_manager.restore(step, items=target)
         implicit_train_state = restored['model'][0]
         velocity_train_state = restored['model'][1]
         
         index = restored['index']
+        subindex=restored['subindex']
+        
+        internal_index = dataset.get_index([index, subindex])
+        dptc_x, dptc_y = dataset.getitem(dptc_list, index=internal_index)
+        
+       
+
         
         
     except:
+        index = args.index
+        subindex = args.subindex
         start_epoch = 0
-        index = 0
-
+        internal_index = dataset.get_index(args.index, args.subindex)
+        dptc_x, dptc_y = dataset.getitem(dptc_list)
+        
 
     
-    dptc_list = dataset.generate_pesudo_dptc(20000)
-    pair = dataset.combinations[index]
+    
+    # pair = dataset.combinations[index]
+    pair = [index, subindex]
     print(" train for {0} -----> {1}...............".format(pair[0], pair[1]))
         
         
-    dptc_x, dptc_y = dataset.getitem(0, dptc_list)
-        
-        
     bounding_box = mesh_utils.get_bounding_box(jnp.concatenate((dptc_x.points, dptc_y.points)))
-    prefix = dataset.mesh_paths[index][:-5] + '_'
+    prefix = dataset.mesh_paths[internal_index][:-5] + '_'
     
     plot_manager(lower=bounding_box[0], upper=bounding_box[1], vertex_size = len(dptc_x.verts), prefix=prefix)
     
@@ -182,11 +190,13 @@ def run(conf, checkpoint_manager, plot_manager, dataset):
     
     # save check points and input shape
     checkpoint_info={
-        'index':0,
+        'index': index,
+        'subindex': subindex,
         'pair':pair,
         'upper':bounding_box[0],
         'lower':bounding_box[1],
     }
+    
     save_args = orbax_utils.save_args_from_target({'model': (implicit_train_state, velocity_train_state) , **checkpoint_info})
 
     batch_metrics = {}
@@ -238,9 +248,6 @@ def run(conf, checkpoint_manager, plot_manager, dataset):
                 batch_metrics[key_name] = [value]
             
         
-        if conf.wandb_log:
-            wandb.log(metrics, step=epoch)
-
     if conf.training.fine_tune:
         print('start fine tuning......')
         for epoch in tqdm(range(conf.training.nepochs+1, conf.training.end+1)):
@@ -276,7 +283,8 @@ if __name__ == "__main__":
     parser.add_argument('--log', action='store_true', help="if log into wandb")
     parser.add_argument('--eval',action='store_true', help="if evaluate using higher resolution")
     parser.add_argument('--reset', action='store_true', help="if restart the experiment")
-    parser.add_argument('--subindex', type=int, default=0, help="subindex of the dataset")
+    parser.add_argument('--index', default=0, type=int, help="source index of the dataset")
+    parser.add_argument('--subindex', default=1, type=int, help="target index of the dataset")
     
     args = parser.parse_args()
     

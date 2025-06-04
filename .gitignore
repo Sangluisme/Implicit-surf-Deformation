@@ -4,3 +4,5 @@ exp/*
 data/*
 */__pycache__
 */__pycache__/*
+corr_data/*
+corr_data

@@ -99,24 +99,25 @@ def eval_all(conf, checkpoint_manager, plot_manager, dataset):
     
     try:
         step = checkpoint_manager.latest_step() 
-        target = {'model':(implicit_train_state, velocity_train_state), 'index': 0, 'pair': [0,1], 'upper':np.array([0.5,0.8,0.4]), 'lower': np.array([-0.5,-0.8,-0.4])}
+        target = {'model':(implicit_train_state, velocity_train_state), 'index': 0, 'subindex': 1, 'pair': [0,1], 'upper':np.array([0.5,0.8,0.4]), 'lower': np.array([-0.5,-0.8,-0.4])}
         restore_args = orbax_utils.restore_args_from_target(target, mesh=None)
         restored = checkpoint_manager.restore(step, items=restore_args, restore_kwargs={'restore_args': restore_args})
         implicit_train_state = restored['model'][0]
         velocity_train_state = restored['model'][1]
-        subindex = restored['index']
         pair = restored['pair']
-        
+        index = restored['index']
+        subindex = restored['subindex']
     
     except Exception as error:
         print('fail to load checkpoints.')
-        
+    
+    internal_index = dataset.get_index(index, subindex)
     dptc_list = dataset.generate_pesudo_dptc(20000)
    
-    dptc_x, dptc_y = dataset.getitem(subindex, dptc_list)
+    dptc_x, dptc_y = dataset.getitem(dptc_list, index=internal_index)
     
     bounding_box = mesh_utils.get_bounding_box(jnp.concatenate((dptc_x.points, dptc_y.points)))
-    prefix = dataset.mesh_paths[subindex][:-5] + '_'
+    prefix = dataset.mesh_paths[internal_index][:-5] + '_'
 
     plot_manager(lower=bounding_box[0], upper=bounding_box[1], vertex_size = len(dptc_x.verts), prefix=prefix)
     # save gt shapes

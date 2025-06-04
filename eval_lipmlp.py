@@ -84,13 +84,14 @@ def eval_all(conf, checkpoint_manager, plot_manager, dataset):
 
     try:
         step = checkpoint_manager.latest_step()
-        target = {'model':implicit_train_state, 'index': 0, 'pair': [0,1], 'upper':np.array([0.5,0.8,0.4]), 'lower': np.array([-0.5,-0.8,-0.4])}
+        target = {'model':implicit_train_state, 'index': 0, 'subindex':1, 'pair': [0,1], 'upper':np.array([0.5,0.8,0.4]), 'lower': np.array([-0.5,-0.8,-0.4])}
         restored = checkpoint_manager.restore(step, items=target)
         implicit_train_state = restored['model']
         pair = restored['pair']
         lower = np.array([-0.5,-0.8,-0.4])
         upper = np.array([0.5,0.8,0.4])
-        subindex = restored['index']
+        index = restored['index']
+        subindex = restored['subindex']
         pair = restored['pair']
         
 
@@ -99,12 +100,13 @@ def eval_all(conf, checkpoint_manager, plot_manager, dataset):
 
     print(" interpolate for {0} -----> {1}...............".format(pair[0], pair[1]))
     
+    internal_index = dataset.get_index(index, subindex)
     dptc_list = dataset.generate_pesudo_dptc(20000)
    
-    dptc_x, dptc_y = dataset.getitem(subindex, dptc_list)
+    dptc_x, dptc_y = dataset.getitem(dptc_list,index=internal_index)
     
     bounding_box = mesh_utils.get_bounding_box(jnp.concatenate((dptc_x.points, dptc_y.points)))
-    prefix = dataset.mesh_paths[subindex][:-5] + '_'
+    prefix = dataset.mesh_paths[internal_index][:-5] + '_'
 
     plot_manager(lower=bounding_box[0], upper=bounding_box[1], vertex_size = len(dptc_x.verts), prefix=prefix)
     # save gt shapes
@@ -139,7 +141,7 @@ if __name__ == "__main__":
         return list(map(int, arg.split(',')))
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--modeldir', type=str, default='./exp/fit_fraust/')
+    parser.add_argument('--modeldir', type=str, default='./exp/faust_lip/')
     parser.add_argument('--steps', type=int, default=5)
     parser.add_argument('--mc_resolution',type=int, default=256)
     parser.add_argument('--skip_recon', action='store_true')

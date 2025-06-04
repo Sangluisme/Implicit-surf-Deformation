@@ -15,6 +15,8 @@ import pickle
 from natsort import natsorted
 import datasets.sampler as sampler
 import argparse
+import utils.visualization as vis
+import scipy
 
 def sort_list(l):
     return natsorted(l)
@@ -188,6 +190,9 @@ class FlaxPairGenerate:
         
         self.train_folder = os.path.join(self.save_dir, 'train')
         utils.mkdir_ifnotexists(self.train_folder)
+        
+        self.corr_vis = os.path.join(self.save_dir, 'corr_vis')
+        utils.mkdir_ifnotexists(self.corr_vis)
 
     def __len__(self):
         return len(self.corres_paths)
@@ -203,26 +208,48 @@ class FlaxPairGenerate:
             try:
                 mesh_x = trimesh.load(os.path.join(self.data_root, mesh_name1 + '.off'))
             except:
-                null_folder = self.data_root[:-9]
-                mesh_x = trimesh.load(os.path.join(null_folder, 'null', 'off', mesh_name1 + '.off'))
-            mesh_y = trimesh.load(os.path.join(self.data_root, mesh_name2 + '.off'))
+                try:
+                    mesh_x = trimesh.load(os.path.join(self.data_root, mesh_name1 + '.ply'))
+                except:
+                    null_folder = self.data_root[:-9]
+                    mesh_x = trimesh.load(os.path.join(null_folder, 'null', 'off', mesh_name1 + '.off'))
+            try:
+                mesh_y = trimesh.load(os.path.join(self.data_root, mesh_name2 + '.off'))
+            except:
+                mesh_y = trimesh.load(os.path.join(self.data_root, mesh_name2 + '.ply'))
             
             print('mesh_x verts: {0} vs mesh_y verts: {1} vs. corres verts: {2} vs max corr {3}'.format(mesh_x.vertices.shape[0], mesh_y.vertices.shape[0], corr_xy.shape[0], np.max(corr_xy)))
             
-            points = mesh_x.vertices
+            # points = mesh_x.vertices
             
             # shape_scale = np.max([np.max(points[:,0])-np.min(points[:,0]),np.max(points[:,1])-np.min(points[:,1]),np.max(points[:,2])-np.min(points[:,2])])
-            shape_center = [(np.max(points[:,0])+np.min(points[:,0]))/2, (np.max(points[:,1])+np.min(points[:,1]))/2, (np.max(points[:,2])+np.min(points[:,2]))/2]
+            # shape_center = [(np.max(points[:,0])+np.min(points[:,0]))/2, (np.max(points[:,1])+np.min(points[:,1]))/2, (np.max(points[:,2])+np.min(points[:,2]))/2]
             
             # mesh_x.vertices = mesh_x.vertices - shape_center
             # mesh_x.vertices = mesh_x.vertices / 1.5
             
-            points = mesh_y.vertices
+            # points = mesh_y.vertices
             # shape_scale = np.max([np.max(points[:,0])-np.min(points[:,0]),np.max(points[:,1])-np.min(points[:,1]),np.max(points[:,2])-np.min(points[:,2])])
-            shape_center = [(np.max(points[:,0])+np.min(points[:,0]))/2, (np.max(points[:,1])+np.min(points[:,1]))/2, (np.max(points[:,2])+np.min(points[:,2]))/2]
+            # shape_center = [(np.max(points[:,0])+np.min(points[:,0]))/2, (np.max(points[:,1])+np.min(points[:,1]))/2, (np.max(points[:,2])+np.min(points[:,2]))/2]
             
             
             # mesh_y.vertices = mesh_y.vertices - shape_center
+            mesh_x.apply_translation(-mesh_x.centroid)
+            mesh_y.apply_translation(-mesh_y.centroid)
+            
+            #
+            area = mesh_x.area  # Get the current surface area
+            scale_factor = (1.0 / area) ** 0.5  # Compute scale factor
+
+            # Scale the mesh
+            mesh_x.apply_scale(scale_factor)
+            
+            
+            area = mesh_y.area  # Get the current surface area
+            scale_factor = (1.0 / area) ** 0.5  # Compute scale factor
+
+            # Scale the mesh
+            mesh_y.apply_scale(scale_factor)
             
             if mesh_y.vertices.shape[0] < len(corr_xy):
                 corr_xy = corr_xy[:mesh_y.vertices.shape[0]]
@@ -241,6 +268,20 @@ class FlaxPairGenerate:
 
             verts_x = mesh_x.vertices[corr_xy].squeeze()
             normal_x = mesh_x.vertex_normals[corr_xy].squeeze()
+            
+            R = align_shape(verts_x=verts_x, verts_y=verts_y)
+            # rotated the verts
+            verts_y = verts_y @ R.T
+            normal_y = normal_y @ R.T
+            mesh_y.vertices = mesh_y.vertices @ R.T  # Apply rotation to vertices
+
+            # Rotate the normals
+            mesh_y.vertex_normals = mesh_y.vertex_normals @ R.T  # Apply the same rotation to normals
+
+            # Rotate face normals (if needed)
+            mesh_y.face_normals = mesh_y.face_normals @ R.T
+            
+        
             
             shape_x = PointShape(verts = verts_x, normals=normal_x, mesh=mesh_x, name=mesh_name1)
             shape_y = PointShape(verts=verts_y, normals=normal_y, mesh=mesh_y, name=mesh_name2)
@@ -272,6 +313,10 @@ class FlaxPairGenerate:
             points = jnp.concatenate([dptc_y.verts, dptc_y.points])
             filename = os.path.join(self.ptc_folder, mesh_name2 + '.ply')
             mesh_utils.save_pointcloud(points=points, filename=filename)
+            
+            prefix = self.corres_paths[index][:-8]
+            colors = vis.get_corres_color(dptc_x, 1)
+            vis.save_corres_color(dptc_x, dptc_y, colors, self.corr_vis, prefix)
         
         print('done.')
 
@@ -393,7 +438,6 @@ def generate_pesudo_dptc(point_num):
             local_sigma=jnp.zeros((point_num + 5000,3)),
             upper=jnp.ones((3)),
             lower=-jnp.ones((3)),
-            features=jnp.array([])
     )  
 
     dptc_list = [dptc_x, dptc_x]
@@ -413,6 +457,13 @@ def init_point_cloud(shape_x, point_num=20000):
                         )
     
     return dptc_x
+
+
+def align_shape(verts_x, verts_y):
+    R, sca = scipy.linalg.orthogonal_procrustes(verts_x, verts_y)
+    return R
+        
+    
 
 
 

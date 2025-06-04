@@ -49,36 +49,7 @@ pip install natsort
 
 ## 📏 Data Preparation
 
-We offer 3 different dataset:
-
-- ### Temporal Sequence Data, such as [**4D-DRESS**](https://eth-ait.github.io/4d-dress/)
-
-Please download the dataset from the website and get the folder has structure such as:
-
-    |--- _4D-DRESS_00135_Outer_2
-        |--Take19
-            |--Capture
-            |--Meshes_pkl
-            |--Semantic
-            |--SMPL
-            ....
-
-then run 
-```
-python ./datasets/preprocessing.py --data_root <TO YOUR DATA FOLDER> --seq_num <YOUR SEQUENCE NUMER> --save_dir ./data/ --data_type temporal
-```
-for example
-```
-python ./datasets/preprocessing.py --data_root ./_4D-DRESS_00135_Outer_2 --seq_num 19 --save_dir ./data/ --data_type temporal
-```
-
-It will create a `Take19` folder under `data` folder, containing
-    
-    |-Take19
-        |--mesh
-        |--ptc
-        |--smpl
-        |--train
+We offer 2 different dataset:
 
 - ### Shape matching data where the correspondences are obtained from method [**Unsupervised Learning of Robust Spectral Shape Matching**](https://github.com/dongliangcao/unsupervised-learning-of-robust-spectral-shape-matching)
 
@@ -118,12 +89,12 @@ python ./datasets/preprocessing.py --data_root ./download_data/smal --save_dir .
 ## 💻 Deformation Training and Evaluation
 
 ```
-python train.py --conf <CONFIG FILE> --savedir <SAVE PATH> --expname <NAME OF EXPERIMENT> --subindex <INDEX OF DEORM PAIR> --reset
+python train.py --conf <CONFIG FILE> --savedir <SAVE PATH> --expname <NAME OF EXPERIMENT> --index <INDEX OF SOURCE SHAPE> --subindex <INDEX OF TARGET SHAPE> --reset
 ```
 for example, train for pair in `FAUST_r`:
 
 ```
-python train.py --conf ./conf/faust.conf --savedir ./exp --expname faust_r --subindex 4 --reset
+python train.py --conf ./conf/faust.conf --savedir ./exp --expname faust_r --index 0 --subindex 4 --reset
 ```
 
 Evaluation
@@ -136,16 +107,20 @@ for example:
 ```
 python eval.py --modeldir ./exp/faust/2024_12_12_12_12_12/ --steps 5 --me_resolution 256
 ```
+### Change settings
+
+- You can change setting on `./conf/`.  Especially when errors such as out of memory happens, please reduce the batch_size, or MLP layers, or T. 
+- We recommend time step $T_e$ during evaluation is not larger than twice of T during training, for better results. I.e., $T_e$ < 2T.  
 
 ## 📺 LipMLP Training and Evaluation
 
 ```
-python train_lipmlp.py --conf <CONFIG FILE> --savedir <SAVE PATH> --expname <NAME OF EXPERIMENT> --subindex <INDEX OF DEORM PAIR>
+python train_lipmlp.py --conf <CONFIG FILE> --savedir <SAVE PATH> --expname <NAME OF EXPERIMENT> --index <INDEX OF SOURCE SHAPE> --subindex <INDEX OF TARGET SHAPE>
 ```
 for example, train for pair in `FAUST_r`:
 
 ```
-python train_lipmlp.py --conf ./conf/faust_lip.conf --savedir ./exp --expname faust_r --subindex 4 --reset
+python train_lipmlp.py --conf ./conf/faust_lip.conf --savedir ./exp --expname faust_r --index 0 --subindex 4 --reset
 ```
 
 Evaluation
